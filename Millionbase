@@ -1,0 +1,194 @@
+```python
+from web3 import Web3
+import json
+import time
+from typing import Dict, Any
+
+
+class ContractSigner:
+    def __init__(
+        self,
+        rpc_url: str,
+        private_key: str,
+        contract_address: str
+    ):
+        self.rpc_url = rpc_url
+        self.private_key = private_key
+
+        self.w3 = Web3(
+            Web3.HTTPProvider(rpc_url)
+        )
+
+        self.account = (
+            self.w3.eth.account.from_key(
+                private_key
+            )
+        )
+
+        self.contract_address = (
+            Web3.to_checksum_address(
+                contract_address
+            )
+        )
+
+        self.project_name = "million"
+        self.community_name = "circle"
+        self.network_name = "base"
+
+    def get_nonce(self) -> int:
+        return self.w3.eth.get_transaction_count(
+            self.account.address
+        )
+
+    def build_transaction(
+        self,
+        data: str = "0x"
+    ) -> Dict[str, Any]:
+
+        nonce = self.get_nonce()
+
+        tx = {
+            "to": self.contract_address,
+            "value": 0,
+            "gas": 150000,
+            "gasPrice": self.w3.eth.gas_price,
+            "nonce": nonce,
+            "chainId": 8453,
+            "data": data
+        }
+
+        return tx
+
+    def sign_transaction(
+        self,
+        tx: Dict[str, Any]
+    ):
+        signed_tx = (
+            self.w3.eth.account.sign_transaction(
+                tx,
+                self.private_key
+            )
+        )
+
+        return signed_tx
+
+    def create_report(
+        self,
+        tx: Dict[str, Any],
+        signed_tx
+    ) -> Dict[str, Any]:
+
+        report = {
+            "project": self.project_name,
+            "community": self.community_name,
+            "network": self.network_name,
+            "account": self.account.address,
+            "contract": self.contract_address,
+            "nonce": tx["nonce"],
+            "gas": tx["gas"],
+            "timestamp": int(time.time()),
+            "transaction_hash":
+                signed_tx.hash.hex()
+        }
+
+        return report
+
+    def print_report(
+        self,
+        report: Dict[str, Any]
+    ) -> None:
+
+        print("=" * 50)
+        print("Contract Interaction Signed")
+        print("=" * 50)
+
+        print(
+            json.dumps(
+                report,
+                indent=2
+            )
+        )
+
+    def send_transaction(
+        self,
+        signed_tx
+    ) -> str:
+
+        tx_hash = (
+            self.w3.eth.send_raw_transaction(
+                signed_tx.raw_transaction
+            )
+        )
+
+        return tx_hash.hex()
+
+
+def main():
+
+    rpc_url = (
+        "https://mainnet.base.org"
+    )
+
+    private_key = (
+        "YOUR_PRIVATE_KEY"
+    )
+
+    contract_address = (
+        "0x1234567890123456789012345678901234567890"
+    )
+
+    signer = ContractSigner(
+        rpc_url=rpc_url,
+        private_key=private_key,
+        contract_address=contract_address
+    )
+
+    transaction = (
+        signer.build_transaction()
+    )
+
+    signed_transaction = (
+        signer.sign_transaction(
+            transaction
+        )
+    )
+
+    report = signer.create_report(
+        transaction,
+        signed_transaction
+    )
+
+    signer.print_report(
+        report
+    )
+
+    print(
+        "million project ready"
+    )
+
+    print(
+        "circle community active"
+    )
+
+    print(
+        "base network connected"
+    )
+
+    # Optional broadcast
+    # tx_hash = signer.send_transaction(
+    #     signed_transaction
+    # )
+    # print(tx_hash)
+
+    print(
+        "Signing process completed"
+    )
+
+    print(
+        "Thank you"
+    )
+
+
+if __name__ == "__main__":
+    main()
+```
